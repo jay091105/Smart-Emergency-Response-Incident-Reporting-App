@@ -1,0 +1,43 @@
+name: smart_emergency_app
+description: "Smart Emergency Response & Incident Reporting App"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  flutter_riverpod: ^2.0.0
+
+  # Hive Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Additional Packages
+  uuid: ^4.5.1
+  intl: ^0.20.2
+  connectivity_plus: ^6.1.4
+  geolocator: ^14.0.2
+  fl_chart: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+  # Hive Generator
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.15
+
+flutter:
+  uses-material-design: true
+
+ 
