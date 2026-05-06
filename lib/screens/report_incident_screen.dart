@@ -1,310 +1,580 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
-import '../models/incident.dart';
-import '../services/incident_service.dart';
-import '../utils/logger.dart';
-
-/// Incident priority enum
-enum IncidentPriority { low, medium, high, critical }
-
-/// Incident category enum
-enum IncidentCategory { medical, fire, security, environment, utility, accident, other }
-
-/// Form state notifier for incident reporting
-class IncidentFormNotifier extends StateNotifier<IncidentFormState> {
-  IncidentFormNotifier() : super(IncidentFormState());
-
-  void setTitle(String title) => state = state.copyWith(title: title);
-  void setDescription(String desc) => state = state.copyWith(description: desc);
-  void setPriority(IncidentPriority priority) => state = state.copyWith(priority: priority);
-  void setCategory(IncidentCategory category) => state = state.copyWith(category: category);
-  void setLocation(String location) => state = state.copyWith(location: location);
-
-  bool validate() {
-    if (state.title.trim().isEmpty) return false;
-    if (state.description.trim().isEmpty) return false;
-    if (state.location.trim().isEmpty) return false;
-    return true;
-  }
+void main() {
+  runApp(const EmergencyApp());
 }
 
-/// Form state class
-class IncidentFormState {
-  final String title;
-  final String description;
-  final IncidentPriority priority;
-  final IncidentCategory category;
-  final String location;
+class EmergencyApp extends StatelessWidget {
+  const EmergencyApp({super.key});
 
-  IncidentFormState({
-    this.title = '',
-    this.description = '',
-    this.priority = IncidentPriority.medium,
-    this.category = IncidentCategory.other,
-    this.location = '',
-  });
-
-  IncidentFormState copyWith({
-    String? title,
-    String? description,
-    IncidentPriority? priority,
-    IncidentCategory? category,
-    String? location,
-  }) {
-    return IncidentFormState(
-      title: title ?? this.title,
-      description: description ?? this.description,
-      priority: priority ?? this.priority,
-      category: category ?? this.category,
-      location: location ?? this.location,
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Emergency Report',
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF7F7F7),
+      ),
+      home: const ReportIncidentScreen(),
     );
   }
 }
 
-/// Riverpod provider for incident form
-final incidentFormProvider = StateNotifierProvider<IncidentFormNotifier, IncidentFormState>((ref) {
-  return IncidentFormNotifier();
-});
-
-/// Report Incident Screen Widget
-class ReportIncidentScreenWidget extends ConsumerWidget {
-  const ReportIncidentScreenWidget({super.key});
+class ReportIncidentScreen extends StatefulWidget {
+  const ReportIncidentScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return _ReportIncidentScreenContent(ref: ref);
-  }
+  State<ReportIncidentScreen> createState() =>
+      _ReportIncidentScreenState();
 }
 
-/// Report Incident Screen Content
-class _ReportIncidentScreenContent extends ConsumerStatefulWidget {
-  final WidgetRef ref;
-  const _ReportIncidentScreenContent({super.key, required this.ref});
+class _ReportIncidentScreenState
+    extends State<ReportIncidentScreen> {
+  final TextEditingController titleController =
+      TextEditingController();
 
-  @override
-  ConsumerState<_ReportIncidentScreenContent> createState() => _ReportIncidentScreenContentState();
-}
+  final TextEditingController descriptionController =
+      TextEditingController();
 
-class _ReportIncidentScreenContentState extends ConsumerState<_ReportIncidentScreenContent> {
-  final _formKey = GlobalKey<FormState>();
-  bool _isSubmitting = false;
+  final TextEditingController locationController =
+      TextEditingController();
+
+  String selectedCategory = "Select category...";
+  String selectedPriority = "Low";
+
+  final List<String> categories = [
+    "Medical",
+    "Fire",
+    "Security",
+    "Hazmat",
+    "Infrastructure",
+  ];
+
+  final List<String> priorities = [
+    "Critical",
+    "High",
+    "Medium",
+    "Low",
+  ];
+
+  int currentIndex = 2;
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(incidentFormProvider);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Report Incident'),
-        centerTitle: true,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: currentIndex,
+        onDestinationSelected: (value) {
+          setState(() {
+            currentIndex = value;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: "Dashboard",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.list_alt_outlined),
+            selectedIcon: Icon(Icons.list_alt),
+            label: "Incidents",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.add_circle_outline),
+            selectedIcon: Icon(Icons.add_circle),
+            label: "Report",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.admin_panel_settings_outlined),
+            selectedIcon: Icon(Icons.admin_panel_settings),
+            label: "Admin",
+          ),
+        ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title field
-                const Text('Incident Title *', style: TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  decoration: InputDecoration(
-                    hintText: 'e.g., Medical Emergency',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        child: Column(
+          children: [
+            // HEADER
+            Container(
+              color: const Color(0xFF11182B),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 5,
+                    backgroundColor: Colors.red,
                   ),
-                  validator: (v) => v?.trim().isEmpty == true ? 'Title is required' : null,
-                  onChanged: (v) => ref.read(incidentFormProvider.notifier).setTitle(v),
-                ),
-                const SizedBox(height: 16),
-
-                // Description field
-                const Text('Description *', style: TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  decoration: InputDecoration(
-                    hintText: 'Provide details about the incident',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  maxLines: 4,
-                  validator: (v) => v?.trim().isEmpty == true ? 'Description is required' : null,
-                  onChanged: (v) => ref.read(incidentFormProvider.notifier).setDescription(v),
-                ),
-                const SizedBox(height: 16),
-
-                // Category dropdown
-                const Text('Category *', style: TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<IncidentCategory>(
-                  value: form.category,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  items: IncidentCategory.values
-                      .map((cat) => DropdownMenuItem(value: cat, child: Text(_categoryLabel(cat))))
-                      .toList(),
-                  onChanged: (cat) {
-                    if (cat != null) ref.read(incidentFormProvider.notifier).setCategory(cat);
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Priority dropdown
-                const Text('Priority *', style: TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<IncidentPriority>(
-                  value: form.priority,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  items: IncidentPriority.values
-                      .map((p) => DropdownMenuItem(value: p, child: Text(_priorityLabel(p))))
-                      .toList(),
-                  onChanged: (p) {
-                    if (p != null) ref.read(incidentFormProvider.notifier).setPriority(p);
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Location field
-                const Text('Location *', style: TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  decoration: InputDecoration(
-                    hintText: 'Manual entry or GPS location',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.location_on),
-                      onPressed: () {
-                        // TODO: Implement simulated GPS
-                        ref.read(incidentFormProvider.notifier).setLocation('Current Location');
-                      },
-                    ),
-                  ),
-                  validator: (v) => v?.trim().isEmpty == true ? 'Location is required' : null,
-                  onChanged: (v) => ref.read(incidentFormProvider.notifier).setLocation(v),
-                ),
-                const SizedBox(height: 24),
-
-                // Submit button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isSubmitting ? null : _submitReport,
-                    icon: _isSubmitting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.check),
-                    label: Text(_isSubmitting ? 'Submitting...' : 'Submit Report'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Offline notice
-                Card(
-                  color: Colors.blue.shade50,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.cloud_off, color: Colors.blue),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Incidents are saved locally and synced when connection is restored.',
-                            style: TextStyle(fontSize: 12),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Emergency Response",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight:
+                                FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Offline mode active",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade400,
+                      borderRadius:
+                          BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      "0 Critical",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
-          ),
+
+            // OFFLINE BANNER
+            Container(
+              width: double.infinity,
+              color: const Color(0xFFF3E8D4),
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.wifi_off,
+                    size: 18,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      "Offline — 0 report(s) queued for sync",
+                      style: TextStyle(
+                        color: Colors.brown,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      "Restore connection",
+                    ),
+                  )
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "NEW INCIDENT REPORT",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
+                        fontSize: 22,
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // INCIDENT TITLE
+                    const Text(
+                      "Incident title *",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      controller:
+                          titleController,
+                      decoration:
+                          InputDecoration(
+                        hintText:
+                            "Brief, clear title...",
+                        filled: true,
+                        fillColor:
+                            Colors.white,
+                        border:
+                            OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius
+                                  .circular(
+                                      14),
+                          borderSide:
+                              BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // DESCRIPTION
+                    const Text(
+                      "Description *",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      controller:
+                          descriptionController,
+                      maxLines: 5,
+                      decoration:
+                          InputDecoration(
+                        hintText:
+                            "Describe what happened, who's affected, any immediate dangers...",
+                        filled: true,
+                        fillColor:
+                            Colors.white,
+                        border:
+                            OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius
+                                  .circular(
+                                      14),
+                          borderSide:
+                              BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // CATEGORY
+                    const Text(
+                      "Category *",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Container(
+                      padding:
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal: 16,
+                      ),
+                      decoration:
+                          BoxDecoration(
+                        color: Colors.white,
+                        borderRadius:
+                            BorderRadius
+                                .circular(14),
+                      ),
+                      child:
+                          DropdownButtonHideUnderline(
+                        child:
+                            DropdownButton<
+                                String>(
+                          isExpanded: true,
+                          value:
+                              selectedCategory,
+                          items: [
+                            const DropdownMenuItem(
+                              value:
+                                  "Select category...",
+                              child: Text(
+                                "Select category...",
+                              ),
+                            ),
+                            ...categories.map(
+                              (e) =>
+                                  DropdownMenuItem(
+                                value: e,
+                                child: Text(e),
+                              ),
+                            )
+                          ],
+                          onChanged:
+                              (value) {
+                            setState(() {
+                              selectedCategory =
+                                  value!;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // PRIORITY
+                    const Text(
+                      "Priority *",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children:
+                          priorities.map(
+                        (priority) {
+                          bool selected =
+                              selectedPriority ==
+                                  priority;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedPriority =
+                                    priority;
+                              });
+                            },
+                            child: Container(
+                              width: 150,
+                              padding:
+                                  const EdgeInsets
+                                      .symmetric(
+                                vertical: 14,
+                              ),
+                              decoration:
+                                  BoxDecoration(
+                                color: selected
+                                    ? priorityColor(
+                                        priority)
+                                    : Colors
+                                        .white,
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(
+                                            14),
+                              ),
+                              alignment:
+                                  Alignment
+                                      .center,
+                              child: Text(
+                                priority,
+                                style:
+                                    TextStyle(
+                                  color: selected
+                                      ? Colors
+                                          .white
+                                      : Colors
+                                          .black,
+                                  fontWeight:
+                                      FontWeight
+                                          .w600,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ).toList(),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // LOCATION
+                    const Text(
+                      "Location",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    InkWell(
+                      onTap: () {
+                        locationController.text =
+                            "Main Campus Block A";
+                      },
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_outlined,
+                          ),
+                          const SizedBox(
+                              width: 8),
+                          const Text(
+                            "Use simulated GPS location",
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    TextField(
+                      controller:
+                          locationController,
+                      decoration:
+                          InputDecoration(
+                        hintText:
+                            "Or enter location manually...",
+                        filled: true,
+                        fillColor:
+                            Colors.white,
+                        border:
+                            OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius
+                                  .circular(
+                                      14),
+                          borderSide:
+                              BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // OFFLINE WARNING
+                    Container(
+                      padding:
+                          const EdgeInsets
+                              .all(16),
+                      decoration:
+                          BoxDecoration(
+                        color: const Color(
+                            0xFFF3E8D4),
+                        borderRadius:
+                            BorderRadius
+                                .circular(14),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.wifi_off,
+                            color:
+                                Colors.orange,
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              "Offline — report will be queued and synced when connection restores.",
+                              style: TextStyle(
+                                color:
+                                    Colors.brown,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // SUBMIT BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      height: 58,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(
+                                  context)
+                              .showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Incident queued successfully",
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.send,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          "Queue report for sync",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight:
+                                FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        style:
+                            ElevatedButton
+                                .styleFrom(
+                          backgroundColor:
+                              const Color(
+                                  0xFF11182B),
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius
+                                    .circular(
+                                        14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Future<void> _submitReport() async {
-    if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields'), backgroundColor: Colors.red),
-      );
-      return;
-    }
+  Color priorityColor(String priority) {
+    switch (priority) {
+      case "Critical":
+        return Colors.red;
 
-    final form = ref.read(incidentFormProvider);
-    if (!ref.read(incidentFormProvider.notifier).validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields'), backgroundColor: Colors.red),
-      );
-      return;
-    }
+      case "High":
+        return Colors.orange;
 
-    setState(() => _isSubmitting = true);
+      case "Medium":
+        return Colors.blue;
 
-    try {
-      final id = const Uuid().v4();
-      final incident = Incident(
-        id: id,
-        title: form.title,
-        description: form.description,
-        timestamp: DateTime.now(),
-      );
-
-      await IncidentService.instance.saveIncident(incident, markPending: true);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Incident reported successfully! ID: $id'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e, st) {
-      logError('submitReport error: $e\n$st');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
-  }
-
-  String _priorityLabel(IncidentPriority p) {
-    switch (p) {
-      case IncidentPriority.low:
-        return 'Low';
-      case IncidentPriority.medium:
-        return 'Medium';
-      case IncidentPriority.high:
-        return 'High';
-      case IncidentPriority.critical:
-        return 'Critical';
-    }
-  }
-  String _categoryLabel(IncidentCategory cat) {
-    switch (cat) {
-      case IncidentCategory.medical:
-        return 'Medical';
-      case IncidentCategory.fire:
-        return 'Fire';
-      case IncidentCategory.security:
-        return 'Security';
-      case IncidentCategory.environment:
-        return 'Environment';
-      case IncidentCategory.utility:
-        return 'Utility';
-      case IncidentCategory.accident:
-        return 'Accident';
-      case IncidentCategory.other:
-        return 'Other';
+      default:
+        return Colors.green;
     }
   }
 }

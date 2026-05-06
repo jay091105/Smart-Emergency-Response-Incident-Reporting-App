@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/report_incident_screen.dart';
 
 void main() {
   runApp(const EmergencyApp());
@@ -14,9 +15,9 @@ class EmergencyApp extends StatelessWidget {
       title: 'Emergency Response',
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+        scaffoldBackgroundColor: const Color(0xFFF7F7F7),
       ),
-      home: const HomePage(),
+      home: const IncidentListScreen(),
     );
   }
 }
