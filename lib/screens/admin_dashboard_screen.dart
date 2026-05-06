@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import '../models/incident.dart';
-import 'report_incident_screen.dart';
 
 /// Sample incident data for demo/testing
 final List<Incident> _sampleIncidents = [
@@ -116,7 +115,10 @@ class AdminDashboardScreen extends ConsumerWidget {
         ),
       ),      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportIncidentScreenWidget()));
+          // Navigate to report incident screen
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Add Incident feature')),
+          );
         },
         icon: const Icon(Icons.add_alert),
         label: const Text('Add Incident'),
@@ -402,8 +404,8 @@ class _CriticalAndActionsSection extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Text('No critical incidents', style: TextStyle(fontSize: 14)),
                   )
-                else
-                  ...topCritical.map((i) => Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: _CriticalItem(incident: i))).toList(),
+        else
+                  ...topCritical.map((i) => Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: _CriticalItem(incident: i))),
               ],
             ),
           ),

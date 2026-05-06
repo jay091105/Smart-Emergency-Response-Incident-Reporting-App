@@ -13,7 +13,7 @@ import 'package:smart_emergency_app/main.dart';
 void main() {
   testWidgets('Emergency App loads smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const EmergencyApp());
+    await tester.pumpWidget(const EmergencyAdminApp());
 
     // Verify that the Emergency Response header is displayed.
     expect(find.text('Emergency Response'), findsOneWidget);

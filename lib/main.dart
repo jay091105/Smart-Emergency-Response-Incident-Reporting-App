@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'screens/report_incident_screen.dart';
 
 void main() {
-  runApp(const EmergencyApp());
+  runApp(const EmergencyAdminApp());
 }
 
-class EmergencyApp extends StatelessWidget {
-  const EmergencyApp({super.key});
+class EmergencyAdminApp extends StatelessWidget {
+  const EmergencyAdminApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +16,7 @@ class EmergencyApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF7F7F7),
       ),
-      home: const IncidentListScreen(),
+      home: const AdminDashboardScreen(),
     );
   }
 }
@@ -25,79 +24,98 @@ class EmergencyApp extends StatelessWidget {
 class Incident {
   final String id;
   final String title;
-  final String description;
   final String category;
-  final String priority;
-  final String status;
-  final String location;
   final String time;
+  final String location;
+  String status;
+  String responder;
+  String priority;
 
   Incident({
     required this.id,
     required this.title,
-    required this.description,
     required this.category,
-    required this.priority,
-    required this.status,
-    required this.location,
     required this.time,
+    required this.location,
+    required this.status,
+    required this.responder,
+    required this.priority,
   });
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class AdminDashboardScreen extends StatefulWidget {
+  const AdminDashboardScreen({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
-  int currentIndex = 0;
+class _AdminDashboardScreenState
+    extends State<AdminDashboardScreen> {
+  int currentIndex = 3;
+
+  final List<String> statusOptions = [
+    "Reported",
+    "In Progress",
+    "Resolved",
+  ];
+
+  final List<String> responders = [
+    "Unassigned",
+    "Unit Alpha-7",
+    "Unit Bravo-2",
+    "Medical Team",
+  ];
+
+  final List<String> priorities = [
+    "Critical",
+    "High",
+    "Medium",
+    "Low",
+  ];
 
   final List<Incident> incidents = [
     Incident(
-      id: "INC-001",
-      title: "Building Fire — Block C",
-      description:
-          "Smoke reported on 3rd floor, sprinklers activated.",
-      category: "Fire",
-      priority: "Critical",
-      status: "In Progress",
-      location: "Block C, Main Campus",
-      time: "22m ago",
+      id: "INC-009",
+      title: "GHGN",
+      category: "Security",
+      time: "24m ago",
+      location:
+          "Main Gate (GPS: 23.4209°N, 72.5530°E)",
+      status: "Reported",
+      responder: "Unit Alpha-7",
+      priority: "Low",
     ),
     Incident(
       id: "INC-002",
       title: "Medical Emergency — Cafeteria",
-      description:
-          "Person collapsed, suspected cardiac event.",
       category: "Medical",
-      priority: "Critical",
-      status: "Reported",
+      time: "30m ago",
       location: "Main Cafeteria",
-      time: "7m ago",
-    ),
-    Incident(
-      id: "INC-003",
-      title: "Unauthorized Access — Server Room",
-      description:
-          "Badge reader triggered for unknown credential.",
-      category: "Security",
-      priority: "High",
-      status: "In Progress",
-      location: "IT Server Room B2",
-      time: "1h ago",
+      status: "Reported",
+      responder: "Unassigned",
+      priority: "Low",
     ),
     Incident(
       id: "INC-004",
       title: "Gas Leak — Parking Level 1",
-      description:
-          "Gas smell reported near east entrance.",
       category: "Hazmat",
-      priority: "High",
-      status: "Reported",
+      time: "35m ago",
       location: "Parking Level 1 East",
-      time: "12m ago",
+      status: "Reported",
+      responder: "Unassigned",
+      priority: "Low",
+    ),
+    Incident(
+      id: "INC-001",
+      title: "Building Fire — Block C",
+      category: "Fire",
+      time: "45m ago",
+      location: "Block C, Main Campus",
+      status: "In Progress",
+      responder: "Unit Alpha-7",
+      priority: "Low",
     ),
   ];
 
@@ -113,19 +131,25 @@ class _HomePageState extends State<HomePage> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.dashboard),
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
             label: "Dashboard",
           ),
           NavigationDestination(
-            icon: Icon(Icons.list),
+            icon: Icon(Icons.list_alt_outlined),
+            selectedIcon: Icon(Icons.list_alt),
             label: "Incidents",
           ),
           NavigationDestination(
-            icon: Icon(Icons.add_circle),
+            icon: Icon(Icons.add_circle_outline),
+            selectedIcon: Icon(Icons.add_circle),
             label: "Report",
           ),
           NavigationDestination(
-            icon: Icon(Icons.admin_panel_settings),
+            icon:
+                Icon(Icons.admin_panel_settings_outlined),
+            selectedIcon:
+                Icon(Icons.admin_panel_settings),
             label: "Admin",
           ),
         ],
@@ -135,60 +159,57 @@ class _HomePageState extends State<HomePage> {
           children: [
             // HEADER
             Container(
+              color: const Color(0xFF11182B),
               padding: const EdgeInsets.all(16),
-              color: const Color(0xFF1A1F2E),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
+                  const CircleAvatar(
+                    radius: 5,
+                    backgroundColor: Colors.red,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Emergency Response",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight:
+                                FontWeight.bold,
+                            fontSize: 20,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            "Emergency Response",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Offline mode active",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            "All systems operational",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                    padding:
+                        const EdgeInsets.symmetric(
+                      horizontal: 14,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.red.shade400,
+                      borderRadius:
+                          BorderRadius.circular(20),
                     ),
                     child: const Text(
-                      "2 Critical",
+                      "0 Critical",
                       style: TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                            FontWeight.bold,
                       ),
                     ),
                   )
@@ -196,113 +217,63 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-            // ONLINE BANNER
+            // OFFLINE BANNER
             Container(
               width: double.infinity,
-              color: Colors.green.shade100,
-              padding: const EdgeInsets.all(10),
+              color: const Color(0xFFF3E8D4),
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.wifi,
-                    color: Colors.green.shade800,
+                  const Icon(
+                    Icons.wifi_off,
+                    size: 18,
+                    color: Colors.orange,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    "Online — all data synced",
-                    style: TextStyle(
-                      color: Colors.green.shade900,
+                  const Expanded(
+                    child: Text(
+                      "Offline — 0 report(s) queued for sync",
+                      style: TextStyle(
+                        color: Colors.brown,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                  const Spacer(),
                   TextButton(
                     onPressed: () {},
-                    child: const Text("Simulate offline"),
+                    child: const Text(
+                      "Restore connection",
+                    ),
                   )
                 ],
               ),
             ),
 
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "OVERVIEW",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
+              child: ListView(
+                padding:
+                    const EdgeInsets.all(20),
+                children: [
+                  const Text(
+                    "ADMIN — MANAGE INCIDENTS",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
-                    const SizedBox(height: 12),
+                  ),
 
-                    // DASHBOARD CARDS
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics:
-                          const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 1.5,
-                      children: [
-                        dashboardCard(
-                            "Total Incidents", "8",
-                            Colors.blue),
-                        dashboardCard(
-                            "Active", "5",
-                            Colors.orange),
-                        dashboardCard(
-                            "Resolved", "3",
-                            Colors.green),
-                        dashboardCard(
-                            "Critical", "2",
-                            Colors.red),
-                      ],
-                    ),
+                  const SizedBox(height: 24),
 
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      "PRIORITY DISTRIBUTION",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    priorityBar(
-                        "Critical", 0.9, Colors.red),
-                    priorityBar(
-                        "High", 0.7, Colors.orange),
-                    priorityBar(
-                        "Medium", 0.5, Colors.blue),
-                    priorityBar(
-                        "Low", 0.3, Colors.green),
-
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      "RECENT INCIDENTS",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // INCIDENT LIST
-                    ...incidents.map(
-                      (e) => incidentCard(e),
-                    ),
-                  ],
-                ),
+                  ...incidents.map(
+                    (incident) =>
+                        incidentCard(incident),
+                  ),
+                ],
               ),
             ),
           ],
@@ -311,177 +282,308 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget dashboardCard(
-      String title,
-      String value,
-      Color color,
-      ) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        mainAxisAlignment:
-            MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget priorityBar(
-      String label,
-      double value,
-      Color color,
-      ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 70,
-            child: Text(label),
-          ),
-          Expanded(
-            child: LinearProgressIndicator(
-              value: value,
-              minHeight: 8,
-              borderRadius:
-                  BorderRadius.circular(20),
-              backgroundColor:
-                  Colors.grey.shade300,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget incidentCard(Incident incident) {
-    Color priorityColor = Colors.green;
-
-    if (incident.priority == "Critical") {
-      priorityColor = Colors.red;
-    } else if (incident.priority == "High") {
-      priorityColor = Colors.orange;
-    } else if (incident.priority == "Medium") {
-      priorityColor = Colors.blue;
-    }
-
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border(
-          left: BorderSide(
-            color: priorityColor,
-            width: 5,
-          ),
-        ),
+        borderRadius:
+            BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          Text(
-            incident.id,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 11,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            incident.title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          Wrap(
-            spacing: 6,
+          Row(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
-              chip(incident.priority, priorityColor),
-              chip(incident.status, Colors.grey),
-              chip(incident.category, Colors.black54),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      incident.id,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Text(
+                      incident.title,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Text(
+                      "${incident.category} • ${incident.time} • ${incident.location}",
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              priorityChip(
+                  incident.priority),
             ],
           ),
 
-          const SizedBox(height: 10),
-
-          Text(
-            incident.description,
-            style: const TextStyle(
-              color: Colors.black87,
-            ),
-          ),
-
-          const SizedBox(height: 10),
+          const SizedBox(height: 24),
 
           Row(
             children: [
-              const Icon(
-                Icons.location_on,
-                size: 16,
-                color: Colors.grey,
-              ),
-              const SizedBox(width: 4),
               Expanded(
-                child: Text(
-                  incident.location,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                  ),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Status",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Container(
+                      padding:
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal: 14,
+                      ),
+                      decoration:
+                          BoxDecoration(
+                        color: Colors
+                            .grey.shade100,
+                        borderRadius:
+                            BorderRadius
+                                .circular(
+                                    12),
+                      ),
+                      child:
+                          DropdownButtonHideUnderline(
+                        child:
+                            DropdownButton<
+                                String>(
+                          value:
+                              incident.status,
+                          isExpanded: true,
+                          items:
+                              statusOptions
+                                  .map(
+                            (status) =>
+                                DropdownMenuItem(
+                              value: status,
+                              child:
+                                  Text(status),
+                            ),
+                          ).toList(),
+                          onChanged:
+                              (value) {
+                            setState(() {
+                              incident.status =
+                                  value!;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                incident.time,
-                style: const TextStyle(
-                  color: Colors.grey,
+
+              const SizedBox(width: 16),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Responder",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Container(
+                      padding:
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal: 14,
+                      ),
+                      decoration:
+                          BoxDecoration(
+                        color: Colors
+                            .grey.shade100,
+                        borderRadius:
+                            BorderRadius
+                                .circular(
+                                    12),
+                      ),
+                      child:
+                          DropdownButtonHideUnderline(
+                        child:
+                            DropdownButton<
+                                String>(
+                          value:
+                              incident
+                                  .responder,
+                          isExpanded: true,
+                          items:
+                              responders.map(
+                            (responder) =>
+                                DropdownMenuItem(
+                              value:
+                                  responder,
+                              child: Text(
+                                  responder),
+                            ),
+                          ).toList(),
+                          onChanged:
+                              (value) {
+                            setState(() {
+                              incident.responder =
+                                  value!;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          )
+          ),
+
+          const SizedBox(height: 24),
+
+          const Text(
+            "Priority override",
+            style: TextStyle(
+              fontWeight:
+                  FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: priorities.map(
+              (priority) {
+                bool selected =
+                    incident.priority ==
+                        priority;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      incident.priority =
+                          priority;
+                    });
+                  },
+                  child: Container(
+                    width: 100,
+                    padding:
+                        const EdgeInsets
+                            .symmetric(
+                      vertical: 12,
+                    ),
+                    decoration:
+                        BoxDecoration(
+                      color: selected
+                          ? priorityColor(
+                              priority)
+                          : Colors
+                              .grey.shade100,
+                      borderRadius:
+                          BorderRadius
+                              .circular(
+                                  12),
+                    ),
+                    alignment:
+                        Alignment.center,
+                    child: Text(
+                      priority,
+                      style: TextStyle(
+                        color: selected
+                            ? Colors
+                                .white
+                            : Colors
+                                .black,
+                        fontWeight:
+                            FontWeight
+                                .w600,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ).toList(),
+          ),
         ],
       ),
     );
   }
-  Widget chip(String text, Color color) {
-    return Chip(
-      label: Text(
+
+  Widget priorityChip(String text) {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color:
+            priorityColor(text)
+                .withValues(alpha: 0.15),
+        borderRadius:
+            BorderRadius.circular(20),
+      ),
+      child: Text(
         text,
         style: TextStyle(
-          color: color,
-          fontSize: 11,
+          color: priorityColor(text),
+          fontWeight:
+              FontWeight.bold,
         ),
       ),
-      backgroundColor: color.withValues(alpha: 0.1),
-      side: BorderSide.none,
     );
+  }
+
+  Color priorityColor(String priority) {
+    switch (priority) {
+      case "Critical":
+        return Colors.red;
+
+      case "High":
+        return Colors.orange;
+
+      case "Medium":
+        return Colors.blue;
+
+      default:
+        return Colors.green;
+    }
   }
 }
